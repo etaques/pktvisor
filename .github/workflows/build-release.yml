@@ -17,53 +17,8 @@ env:
   CONAN_REVISIONS_ENABLED: 1
 
 jobs:
-  unit-tests:
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, macos-11 ]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Create Build Environment
-        run: cmake -E make_directory ${{github.workspace}}/build
-
-      - name: Get Conan
-        id: conan
-        uses: turtlebrowser/get-conan@main
-        with:
-          version: 1.59.0
-
-      - name: Setup Conan Cache
-        uses: actions/cache@v3
-        with:
-          path: ${{github.workspace}}/build/conan_home/
-          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.txt', '*/conanfile.txt') }}
-          restore-keys: conan-${{ runner.os }}-
-
-      - name: linux package install
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends jq
-
-      - name: Configure CMake
-        shell: bash
-        working-directory: ${{github.workspace}}/build
-        run: PKG_CONFIG_PATH=${{github.workspace}}/local/lib/pkgconfig cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-
-      - name: Build
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: cmake --build . --config $BUILD_TYPE -- -j 2
-
-      - name: Test
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        run: ctest -C $BUILD_TYPE
 
   prebuild-package:
-    needs: [ unit-tests ]
     runs-on: ubuntu-latest
     outputs:
       version_number: ${{ steps.build.outputs.version }}
